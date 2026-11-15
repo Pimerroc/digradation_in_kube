@@ -1,0 +1,25 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: my-app
+  namespace: digradation
+spec:
+  parentRefs:
+    - name: itmo-shared
+      namespace: envoy-gateway-system
+      sectionName: http-digradation
+    - name: itmo-https
+      kind: ListenerSet
+      group: gateway.networking.k8s.io
+      namespace: envoy-gateway-system
+      sectionName: https-digradation
+  hostnames:
+    - my-app.digradation.mlops.goctf.online
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: hello
+          port: 80

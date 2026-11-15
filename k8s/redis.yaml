@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-conf
+  # namespace: digradation
+data:
+  redis.conf: |
+    maxmemory 128mb
+    maxmemory-policy volatile-lru
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: digradation-redis
+  # namespace: digradation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+          volumeMounts:
+            - name: redis-data
+              mountPath: "/data"
+            - name: redis-conf
+              mountPath: "/usr/local/etc/redis/redis.conf"
+              subPath: redis.conf
+              readOnly: true
+      volumes:
+        - name: redis-data
+          emptyDir: {}
+        - name: redis-conf
+          configMap:
+            name: redis-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: digradation-redis
+  # namespace: digradation
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379

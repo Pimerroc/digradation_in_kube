@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: lab-db
+  namespace: digradation
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-minimal-trixie
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+  storage:
+    size: 5Gi
+    storageClass: cloudru-ssd
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '50'
+    pg_hba:
+      - hostnossl all all all reject

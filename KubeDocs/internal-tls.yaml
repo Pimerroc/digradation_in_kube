@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: lab-selfsigned
+  namespace: digradation
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hello-internal
+  namespace: digradation
+spec:
+  secretName: hello-internal-tls
+  commonName: hello.digradation.svc.cluster.local
+  dnsNames:
+    - hello
+    - hello.digradation.svc.cluster.local
+  duration: 168h
+  renewBefore: 24h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  issuerRef:
+    name: lab-selfsigned
+    kind: Issuer
