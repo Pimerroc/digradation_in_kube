@@ -5,7 +5,7 @@ metadata:
   # namespace: digradation
 data:
   redis.conf: |
-    maxmemory 128mb
+    maxmemory 1G
     maxmemory-policy volatile-lru
 ---
 apiVersion: apps/v1
@@ -27,7 +27,7 @@ spec:
         - name: redis
           image: redis:8-alpine
           imagePullPolicy: IfNotPresent
-          command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+          command: ["redis-server", "/config/redis.conf"]
           resources:
             requests:
               cpu: 50m
@@ -49,12 +49,12 @@ spec:
             - name: redis-data
               mountPath: "/data"
             - name: redis-conf
-              mountPath: "/usr/local/etc/redis/redis.conf"
-              subPath: redis.conf
+              mountPath: "/config"
               readOnly: true
       volumes:
         - name: redis-data
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 500Mi
         - name: redis-conf
           configMap:
             name: redis-conf
