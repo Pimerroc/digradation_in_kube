@@ -40,23 +40,24 @@ spec:
               memory: 512Mi
           startupProbe:
             exec:
-              command: ["rabbitmq-diagnostics", "-q", "check_running"]
-            initialDelaySeconds: 30
+              command: ["nc", "-z", "127.0.0.1", "5672"]
+              # Вообще так делать лучше не стоит. Но из-за того, что rabbitmq-diagnose требует 20 секунд на заупуск,
+              # то ничего другого не остается. Иначе у нас при фейле контейнера или если сам ребит упал,
+              # информация поступит лишь спустя секунд 50. (Если брать меньше у нас пробы не будут нормально отрабатывать)
             periodSeconds: 5
-            timeoutSeconds: 30
+            timeoutSeconds: 3
             failureThreshold: 10
           livenessProbe:
             exec:
-              command: ["rabbitmq-diagnostics", "-q", "check_port_connectivity"]
-            initialDelaySeconds: 30
+              command: ["nc", "-z", "127.0.0.1", "5672"]
             periodSeconds: 10
-            timeoutSeconds: 25
-            failureThreshold: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             exec:
-              command: ["rabbitmq-diagnostics", "-q", "check_running"]
-            periodSeconds: 10
-            timeoutSeconds: 200
+              command: ["nc", "-z", "127.0.0.1", "5672"]
+            periodSeconds: 5
+            timeoutSeconds: 5
           volumeMounts:
             - name: rabbitmq-data
               mountPath: "/var/lib/rabbitmq"
