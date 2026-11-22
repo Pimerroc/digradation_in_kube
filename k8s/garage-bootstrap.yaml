@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: garage-bootstrap
+spec:
+  template:
+    metadata:
+      name: garage-bootstrap
+    spec:
+      containers:
+        - name: garage-bootstrap
+          image: pimerroc/garage-bootstrap:latest
+          env:
+            - name: S3_INTERNAL_URL
+              value: http://garage:3900
+            - name: GARAGE_RPC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: di-env
+                  key: GARAGE_RPC_SECRET
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: di-env
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: di-env
+                  key: S3_SECRET_KEY
+          volumeMounts:
+            - name: garage-conf
+              mountPath: "/etc/garage.toml"
+              subPath: garage.toml
+              readOnly: true
+            - name: garage-meta
+              mountPath: "/var/lib/garage/meta"
+      volumes:
+        - name: garage-conf
+          configMap:
+            name: garage-conf
+        - name: garage-meta
+          persistentVolumeClaim:
+            claimName: garage-meta
+      restartPolicy: Never
+  backoffLimit: 3

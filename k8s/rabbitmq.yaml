@@ -8,11 +8,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rabbit
+      app: rabbitmq
   template:
     metadata:
       labels:
-        app: rabbit
+        app: rabbitmq
     spec:
       containers:
         - name: rabbit
@@ -41,7 +41,7 @@ spec:
           startupProbe:
             exec:
               command: ["nc", "-z", "127.0.0.1", "5672"]
-              # Вообще так делать лучше не стоит. Но из-за того, что rabbitmq-diagnose требует 20 секунд на заупуск,
+              # Вообще так делать лучше не стоит. Но из-за того, что rabbitmq-diagnostics требует 20 секунд на заупуск,
               # то ничего другого не остается. Иначе у нас при фейле контейнера или если сам ребит упал,
               # информация поступит лишь спустя секунд 50. (Если брать меньше у нас пробы не будут нормально отрабатывать)
             periodSeconds: 5
@@ -73,12 +73,28 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: digradation-rabbit-service
+  name: rabbitmq-headless
   # namespace: digradation
 spec:
   clusterIP: None
   selector:
-    app: rabbit
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  # namespace: digradation
+spec:
+  selector:
+    app: rabbitmq
   ports:
     - name: amqp
       port: 5672
